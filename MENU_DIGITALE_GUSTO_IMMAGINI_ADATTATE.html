@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#171916">
+<title>Menù digitale | Gusto</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--ink:#171916;--paper:#fbfaf6;--green:#b7d900;--muted:#6c7067;--line:#e4e5dc;--white:#fff}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:12px}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:var(--ink);color:white;text-align:center;padding:27px 16px 24px;border-bottom:5px solid var(--green)}
+.logo{width:56px;height:56px;border:2px solid var(--green);border-radius:50%;display:grid;place-items:center;color:var(--green);font-size:30px;font-weight:950;margin:0 auto 8px}
+.brand{font-size:34px;letter-spacing:3px;font-weight:950;line-height:1}
+.tagline{margin-top:8px;color:#e6e8dd;font-size:13px;letter-spacing:.7px}
+.strap{display:inline-block;margin-top:15px;border:1px solid #55594d;border-radius:99px;padding:7px 12px;font-size:10px;letter-spacing:1.3px;text-transform:uppercase}
+main{max-width:920px;margin:auto;padding:20px 14px 38px}
+.intro{text-align:center;padding:2px 0 18px}
+.intro h1{font-size:25px;margin:0 0 6px;letter-spacing:.5px}
+.intro p{font-size:13px;color:var(--muted);margin:0}
+.status{margin:0 0 16px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:white;color:var(--muted);font-size:13px;line-height:1.45}
+.status.error{border-color:#e6b9b9;background:#fff4f4;color:#8b2525}
+nav{display:flex;gap:8px;overflow-x:auto;padding:2px 0 15px;margin-bottom:4px}
+nav a{flex:none;text-decoration:none;color:var(--ink);background:white;border:1px solid var(--line);border-radius:99px;padding:9px 13px;font-size:12px;font-weight:800;white-space:nowrap}
+nav a.active{background:var(--green);border-color:var(--green)}
+section{margin:22px 0 29px;scroll-margin-top:12px}
+.section-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.section-head:before{content:"";height:3px;width:24px;background:var(--green);flex:none}
+h2{font-size:19px;margin:0;font-weight:950;letter-spacing:.4px;text-transform:uppercase}
+.count{font-size:11px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0}
+.items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:start}
+.item{display:block;width:100%;margin:0 0 10px;background:var(--white);border:1px solid var(--line);border-radius:13px;overflow:hidden;min-width:0}
+.item.has-photo{width:100%;max-width:100%}
+.photo{display:block;width:100%;height:auto;max-height:none;object-fit:initial;background:transparent}
+.itembody{padding:13px}
+.item:not(.has-photo) .itembody{grid-column:1;grid-row:1}
+.itemtop{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.name{font-size:15px;font-weight:850;line-height:1.28;overflow-wrap:anywhere}
+.price{white-space:nowrap;font-weight:950;font-size:14px;background:var(--green);border-radius:7px;padding:5px 7px}
+.desc{font-size:12px;line-height:1.45;color:var(--muted);margin:8px 0 0;white-space:pre-line}
+.no-products{text-align:center;padding:25px 16px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);background:#fff}
+footer{text-align:center;background:#eeefe7;padding:22px 15px;color:var(--muted);font-size:12px}
+footer strong{color:var(--ink);letter-spacing:2px}
+@media(max-width:480px){main{padding-left:11px;padding-right:11px}.items{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.item{margin-bottom:8px}.itembody{padding:10px}.name{font-size:13px}.price{font-size:12px;padding:5px 6px}.desc{font-size:11px}.photo{height:auto;max-height:none}.brand{font-size:31px}h2{font-size:17px}}
+@media(min-width:700px){.items{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">G</div>
+  <div class="brand">GUSTO</div>
+  <div class="tagline">Il piacere in tavola</div>
+  <div class="strap">Gastronomia · Burger · Specialità</div>
+</header>
+<main>
+  <div class="intro"><h1>IL NOSTRO MENÙ</h1><p>Scopri le proposte di Gusto.</p></div>
+  <div id="status" class="status" role="status">Caricamento del catalogo Gusto…</div>
+  <nav id="categories" aria-label="Categorie del menù"></nav>
+  <div id="menu"><div class="no-products">Sto caricando i prodotti…</div></div>
+</main>
+<footer><strong>GUSTO</strong><br>Il piacere in tavola</footer>
+<script>
+const SUPABASE_URL='https://aldqzoexuflliqkgabqb.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_SawSVYE4c7_3Suq63Jvi2A_ESPYm5hC';
+const statusEl=document.getElementById('status');
+const menuEl=document.getElementById('menu');
+const categoriesEl=document.getElementById('categories');
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const euro=v=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(Number(v)||0);
+function packMasonry(){
+ document.querySelectorAll('[data-masonry]').forEach(container=>{
+  const cards=[...container.querySelectorAll(':scope > .item')];
+  if(!cards.length)return;
+  const count=window.matchMedia('(max-width:480px)').matches?2:3;
+  const cols=Array.from({length:count},()=>document.createElement('div'));
+  cols.forEach(col=>{col.style.minWidth='0';col.style.display='flex';col.style.flexDirection='column';col.style.gap='8px';container.appendChild(col)});
+  const heights=Array(count).fill(0);
+  cards.forEach(card=>{
+   const index=heights.indexOf(Math.min(...heights));
+   cols[index].appendChild(card);
+   heights[index]+=card.getBoundingClientRect().height+8;
+  });
+ });
+}
+function renderMenu(products){
+ const visible=products.filter(p=>p&&p.available!==false&&p.categoryActive!==false&&String(p.name||p.nome||'').trim()&&Number.isFinite(Number(p.price??p.prezzo))&&Number(p.price??p.prezzo)>=0)
+  .map(p=>({...p,name:String(p.name||p.nome).trim(),category:String(p.category||p.categoria||'Altro').trim()||'Altro',price:Number(p.price??p.prezzo),desc:String(p.desc||p.description||'').trim(),image:typeof p.image==='string'?p.image:''}));
+ if(!visible.length){statusEl.className='status error';statusEl.textContent='Il catalogo è stato raggiunto, ma non risultano prodotti attivi con nome e prezzo validi.';menuEl.innerHTML='';categoriesEl.innerHTML='';return;}
+ const cats=[...new Set(visible.map(p=>p.category))].sort((a,b)=>a.localeCompare(b,'it'));
+ categoriesEl.innerHTML=cats.map((c,i)=>`<a class="${i===0?'active':''}" href="#cat-${i}">${esc(c)}</a>`).join('');
+ menuEl.innerHTML=cats.map((cat,i)=>{
+  const list=visible.filter(p=>p.category===cat).sort((a,b)=>a.name.localeCompare(b.name,'it'));
+  return `<section id="cat-${i}"><div class="section-head"><h2>${esc(cat)} <span class="count">(${list.length})</span></h2></div><div class="items" data-masonry>${list.map(p=>{
+   const image=p.image&&/^(data:image\/|https?:\/\/)/i.test(p.image)?`<img class="photo" src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy">`:'';
+   return `<article class="item${image?' has-photo':''}">${image}<div class="itembody"><div class="itemtop"><div class="name">${esc(p.name)}</div><div class="price">${euro(p.price)}</div></div>${p.desc?`<p class="desc">${esc(p.desc)}</p>`:''}</div></article>`;
+  }).join('')}</div></section>`;
+ }).join('');
+ packMasonry();
+ statusEl.className='status';
+ statusEl.textContent=`Catalogo caricato: ${visible.length} prodotti attivi in ${cats.length} categorie. Il menù mostra solo le foto realmente salvate nel catalogo.`;
+ const links=[...categoriesEl.querySelectorAll('a')];
+ links.forEach(a=>a.addEventListener('click',()=>{links.forEach(x=>x.classList.remove('active'));a.classList.add('active')}));
+}
+async function loadMenu(){
+ try{
+  if(!window.supabase?.createClient)throw new Error('Libreria catalogo non disponibile. Controlla la connessione.');
+  const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+  const {data,error}=await client.from('gusto_catalogo_prodotti').select('prodotti,updated_at').eq('id','main').maybeSingle();
+  if(error)throw error;
+  if(!data||!Array.isArray(data.prodotti))throw new Error('Non riesco a leggere il catalogo condiviso. Potrebbe essere necessario abilitare la lettura pubblica del catalogo.');
+  renderMenu(data.prodotti);
+ }catch(e){
+  statusEl.className='status error';
+  statusEl.textContent='Catalogo non caricato: '+(e.message||'errore di connessione')+'. Non mostro un menù incompleto o prodotti inventati.';
+  menuEl.innerHTML='<div class="no-products">Per mostrare il menù completo, il catalogo condiviso deve essere leggibile dalla pagina pubblica. Nessun prodotto è stato inventato o sostituito con dati di esempio.</div>';
+  categoriesEl.innerHTML='';
+  console.error('Gusto menu load error',e);
+ }
+}
+loadMenu();
+</script>
+</body>
+</html>
