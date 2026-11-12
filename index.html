@@ -22,7 +22,7 @@ main{max-width:920px;margin:auto;padding:20px 14px 38px}
 .intro p{font-size:13px;color:var(--muted);margin:0}
 .status{margin:0 0 16px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:white;color:var(--muted);font-size:13px;line-height:1.45}
 .status.error{border-color:#e6b9b9;background:#fff4f4;color:#8b2525}
-nav{display:flex;gap:8px;overflow-x:auto;padding:2px 0 15px;margin-bottom:4px}
+nav{position:sticky;top:0;z-index:100;display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;padding:10px 0 12px;margin:0 -2px 4px;background:var(--paper);box-shadow:0 5px 10px rgba(23,25,22,.07);-webkit-overflow-scrolling:touch;scrollbar-width:thin}
 nav a{flex:none;text-decoration:none;color:var(--ink);background:white;border:1px solid var(--line);border-radius:99px;padding:9px 13px;font-size:12px;font-weight:800;white-space:nowrap}
 nav a.active{background:var(--green);border-color:var(--green)}
 section{margin:22px 0 29px;scroll-margin-top:12px}
@@ -85,24 +85,45 @@ function packMasonry(){
  });
 }
 function renderMenu(products){
- const visible=products.filter(p=>p&&p.available!==false&&p.categoryActive!==false&&String(p.name||p.nome||'').trim()&&Number.isFinite(Number(p.price??p.prezzo))&&Number(p.price??p.prezzo)>=0)
+ // Il catalogo condiviso conserva l'ordine deciso nel gestionale.
+ // sourceIndex mantiene la posizione originale dei prodotti nell'array Supabase.
+ const visible=products.map((p,sourceIndex)=>({...p,_gustoSourceIndex:sourceIndex}))
+  .filter(p=>p&&p.available!==false&&p.categoryActive!==false&&String(p.name||p.nome||'').trim()&&Number.isFinite(Number(p.price??p.prezzo))&&Number(p.price??p.prezzo)>=0)
   .map(p=>({...p,name:String(p.name||p.nome).trim(),category:String(p.category||p.categoria||'Altro').trim()||'Altro',price:Number(p.price??p.prezzo),desc:String(p.desc||p.description||'').trim(),image:typeof p.image==='string'?p.image:''}));
  if(!visible.length){statusEl.className='status error';statusEl.textContent='Il catalogo è stato raggiunto, ma non risultano prodotti attivi con nome e prezzo validi.';menuEl.innerHTML='';categoriesEl.innerHTML='';return;}
- const cats=[...new Set(visible.map(p=>p.category))].sort((a,b)=>a.localeCompare(b,'it'));
+ // L'ordine delle categorie è quello impostato nel gestionale (categoryOrder).
+ // In caso di pari valore/mancanza, usa l'ordine in cui compaiono nel catalogo condiviso.
+ const categoryMeta=new Map();
+ visible.forEach(p=>{
+  if(!categoryMeta.has(p.category))categoryMeta.set(p.category,{firstIndex:p._gustoSourceIndex,orders:[]});
+  const raw=p.categoryOrder;
+  if(raw!==undefined&&raw!==null&&raw!==''&&Number.isFinite(Number(raw)))categoryMeta.get(p.category).orders.push(Number(raw));
+ });
+ const cats=[...categoryMeta.keys()].sort((a,b)=>{
+  const ma=categoryMeta.get(a),mb=categoryMeta.get(b);
+  const oa=ma.orders.length?Math.min(...ma.orders):null;
+  const ob=mb.orders.length?Math.min(...mb.orders):null;
+  if(oa!==null&&ob!==null&&oa!==ob)return oa-ob;
+  if(oa!==null&&ob===null)return -1;
+  if(oa===null&&ob!==null)return 1;
+  return ma.firstIndex-mb.firstIndex;
+ });
  categoriesEl.innerHTML=cats.map((c,i)=>`<a class="${i===0?'active':''}" href="#cat-${i}">${esc(c)}</a>`).join('');
  menuEl.innerHTML=cats.map((cat,i)=>{
-  const list=visible.filter(p=>p.category===cat).sort((a,b)=>a.name.localeCompare(b.name,'it'));
-  return `<section id="cat-${i}"><div class="section-head"><h2>${esc(cat)} <span class="count">(${list.length})</span></h2></div><div class="items" data-masonry>${list.map(p=>{
+  // Ordine prodotti identico al gestionale: posizione nell'array condiviso,
+  // aggiornata dal trascinamento nel gestionale e salvata su Supabase.
+  const list=visible.filter(p=>p.category===cat).sort((a,b)=>a._gustoSourceIndex-b._gustoSourceIndex);
+  return `<section id="cat-${i}"><div class="section-head"><h2>${esc(cat)} <span class="count">(${list.length})</span></h2></div><div class="items">${list.map(p=>{
    const image=p.image&&/^(data:image\/|https?:\/\/)/i.test(p.image)?`<img class="photo" src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy">`:'';
    return `<article class="item${image?' has-photo':''}">${image}<div class="itembody"><div class="itemtop"><div class="name">${esc(p.name)}</div><div class="price">${euro(p.price)}</div></div>${p.desc?`<p class="desc">${esc(p.desc)}</p>`:''}</div></article>`;
   }).join('')}</div></section>`;
  }).join('');
- packMasonry();
  statusEl.className='status';
- statusEl.textContent=`Catalogo caricato: ${visible.length} prodotti attivi in ${cats.length} categorie. Il menù mostra solo le foto realmente salvate nel catalogo.`;
+ statusEl.textContent=`Catalogo caricato: ${visible.length} prodotti attivi in ${cats.length} categorie. Ordine sincronizzato con il gestionale.`;
  const links=[...categoriesEl.querySelectorAll('a')];
  links.forEach(a=>a.addEventListener('click',()=>{links.forEach(x=>x.classList.remove('active'));a.classList.add('active')}));
 }
+
 async function loadMenu(){
  try{
   if(!window.supabase?.createClient)throw new Error('Libreria catalogo non disponibile. Controlla la connessione.');
@@ -120,6 +141,16 @@ async function loadMenu(){
  }
 }
 loadMenu();
+// Mantiene il menu aggiornato anche se resta aperto su tablet/monitor.
+let gustoMenuRefreshBusy=false;
+async function refreshGustoDigitalMenu(){
+ if(gustoMenuRefreshBusy||document.visibilityState==='hidden')return;
+ gustoMenuRefreshBusy=true;
+ try{await loadMenu();}finally{gustoMenuRefreshBusy=false;}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshGustoDigitalMenu();});
+window.addEventListener('focus',refreshGustoDigitalMenu);
+setInterval(refreshGustoDigitalMenu,30000);
 </script>
 </body>
 </html>
