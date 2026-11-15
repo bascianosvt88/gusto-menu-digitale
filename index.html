@@ -26,9 +26,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;gap:8px;overflow-x:auto;overf
 nav a{flex:none;text-decoration:none;color:var(--ink);background:white;border:1px solid var(--line);border-radius:99px;padding:9px 13px;font-size:12px;font-weight:800;white-space:nowrap}
 nav a.active{background:var(--green);border-color:var(--green)}
 section{margin:22px 0 29px;scroll-margin-top:12px}
-.section-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.section-head:before{content:"";height:3px;width:24px;background:var(--green);flex:none}
-h2{font-size:19px;margin:0;font-weight:950;letter-spacing:.4px;text-transform:uppercase}
+.section-head{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px;text-align:center}
+.section-head:before,.section-head:after{content:"";height:3px;flex:1;min-width:18px;background:var(--green);border-radius:3px}
+h2{font-size:23px;margin:0;font-weight:950;letter-spacing:.7px;text-transform:uppercase;text-align:center;line-height:1.15}
 .count{font-size:11px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0}
 .items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:start}
 .item{display:block;width:100%;margin:0 0 10px;background:var(--white);border:1px solid var(--line);border-radius:13px;overflow:hidden;min-width:0}
@@ -40,12 +40,46 @@ h2{font-size:19px;margin:0;font-weight:950;letter-spacing:.4px;text-transform:up
 .name{font-size:15px;font-weight:850;line-height:1.28;overflow-wrap:anywhere}
 .price{white-space:nowrap;font-weight:950;font-size:14px;background:var(--green);border-radius:7px;padding:5px 7px}
 .variant-list{display:grid;gap:6px;margin-top:9px}.variant-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fbfcf7;font-size:12px;line-height:1.3}.variant-name{font-weight:700;overflow-wrap:anywhere}.variant-price{white-space:nowrap;font-weight:900;background:var(--green);border-radius:6px;padding:4px 7px}
-.desc{font-size:12px;line-height:1.45;color:var(--muted);margin:8px 0 0;white-space:pre-line}
+.desc{font-size:12px;line-height:1.45;color:var(--muted);margin:8px 0 0;white-space:pre-line}.info-label{font-size:11px;font-weight:900;letter-spacing:.5px;margin:10px 0 4px;color:var(--ink)}.ingredients{font-size:12px;line-height:1.45;color:var(--muted);margin:0;white-space:pre-line}
 .no-products{text-align:center;padding:25px 16px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);background:#fff}
 footer{text-align:center;background:#eeefe7;padding:22px 15px;color:var(--muted);font-size:12px}
 footer strong{color:var(--ink);letter-spacing:2px}
-@media(max-width:480px){main{padding-left:11px;padding-right:11px}.items{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.item{margin-bottom:8px}.itembody{padding:10px}.name{font-size:13px}.price{font-size:12px;padding:5px 6px}.desc{font-size:11px}.photo{height:auto;max-height:none}.brand{font-size:31px}h2{font-size:17px}}
+@media(max-width:480px){main{padding-left:11px;padding-right:11px}.items{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.item{margin-bottom:8px}.itembody{padding:10px}.name{font-size:13px}.price{font-size:12px;padding:5px 6px}.desc,.ingredients{font-size:11px}.photo{height:auto;max-height:none}.brand{font-size:31px}h2{font-size:20px}}
 @media(min-width:700px){.items{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+#printMenuBtn{display:block;margin:14px auto 0;padding:11px 18px;border:0;border-radius:9px;background:var(--green);color:var(--ink);font-weight:900;font-size:14px;cursor:pointer}
+@media print{
+ @page{size:A4 portrait;margin:7mm}
+ html,body{background:#fff!important;color:#111!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+ header{padding:5mm 0 3mm;background:#fff!important;color:#111!important;border-bottom:2px solid #111}
+ .logo{display:none}
+ .brand{font-size:19pt;color:#111!important}
+ .tagline{color:#333!important;font-size:8pt;margin-top:2mm}
+ .strap{display:none}
+ main{max-width:none;margin:0;padding:3mm 0}
+ .intro{padding:0 0 3mm}
+ .intro h1{font-size:14pt;margin:0}
+ .intro p,.status,nav,#printMenuBtn,footer{display:none!important}
+ #menu{display:block}
+ section{margin:0 0 3mm;break-before:auto!important;page-break-before:auto!important;break-inside:auto!important;page-break-inside:auto!important;scroll-margin:0}
+ .section-head{margin:0 0 2mm;gap:3mm;break-after:avoid-page;page-break-after:avoid;text-align:center}
+ .section-head:before,.section-head:after{width:auto;min-width:8mm;height:1mm;flex:1;background:#b7d900!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+ h2{font-size:14pt;letter-spacing:.6px;white-space:normal}
+ .count{font-size:7pt}
+ .items{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:2mm!important;align-items:start}
+ .item,.item.has-photo{display:block!important;width:100%!important;max-width:none!important;margin:0!important;border:0.25mm solid #bbb!important;border-radius:1.5mm!important;overflow:visible!important;break-inside:avoid;page-break-inside:avoid;background:#fff!important}
+ .photo{display:none!important}
+ .itembody{padding:2mm!important}
+ .itemtop{gap:1mm}
+ .name{font-size:9pt;line-height:1.2}
+ .price{font-size:8.5pt;padding:1.2mm 1.5mm;border-radius:1mm;background:var(--green)!important;color:var(--ink)!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+ .variant-list{gap:1mm;margin-top:1mm}
+ .variant-row{padding:1.2mm;font-size:7.5pt;border-radius:1mm}
+ .variant-price{padding:.5mm 1mm;background:var(--green)!important;color:var(--ink)!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+ .desc,.ingredients{font-size:7.5pt;line-height:1.25;margin-top:1.2mm;color:#333!important}
+ .info-label{font-size:6.8pt;margin:1.5mm 0 .7mm}
+}
+
 </style>
 </head>
 <body>
@@ -60,6 +94,7 @@ footer strong{color:var(--ink);letter-spacing:2px}
   <div id="status" class="status" role="status">Caricamento del catalogo Gusto…</div>
   <nav id="categories" aria-label="Categorie del menù"></nav>
   <div id="menu"><div class="no-products">Sto caricando i prodotti…</div></div>
+  <button type="button" id="printMenuBtn">STAMPA MENÙ</button>
 </main>
 <footer><strong>GUSTO</strong><br>Il piacere in tavola</footer>
 <script>
@@ -90,7 +125,7 @@ function renderMenu(products){
  // sourceIndex mantiene la posizione originale dei prodotti nell'array Supabase.
  const visible=products.map((p,sourceIndex)=>({...p,_gustoSourceIndex:sourceIndex}))
   .filter(p=>p&&p.available!==false&&p.categoryActive!==false&&String(p.name||p.nome||'').trim()&&Number.isFinite(Number(p.price??p.prezzo))&&Number(p.price??p.prezzo)>=0)
-  .map(p=>({...p,name:String(p.name||p.nome).trim(),category:String(p.category||p.categoria||'Altro').trim()||'Altro',price:Number(p.price??p.prezzo),desc:String(p.desc||p.description||'').trim(),image:typeof p.image==='string'?p.image:''}));
+  .map(p=>({...p,name:String(p.name||p.nome).trim(),category:String(p.category||p.categoria||'Altro').trim()||'Altro',price:Number(p.price??p.prezzo),desc:String(p.desc??p.description??'').trim(),ingredients:Array.isArray(p.ingredients)?p.ingredients.map(x=>String(x??'').trim()).filter(Boolean).join(', '):String(p.ingredients??'').trim(),image:typeof p.image==='string'?p.image:''}));
  if(!visible.length){statusEl.className='status error';statusEl.textContent='Il catalogo è stato raggiunto, ma non risultano prodotti attivi con nome e prezzo validi.';menuEl.innerHTML='';categoriesEl.innerHTML='';return;}
  // L'ordine delle categorie è quello impostato nel gestionale (categoryOrder).
  // In caso di pari valore/mancanza, usa l'ordine in cui compaiono nel catalogo condiviso.
@@ -121,7 +156,7 @@ function renderMenu(products){
    const priceContent=activeVariants.length
     ? `<div class="variant-list" aria-label="Varianti disponibili">${activeVariants.map(v=>`<div class="variant-row"><span class="variant-name">${esc(v.name)}</span><span class="variant-price">${euro(v.price)}</span></div>`).join('')}</div>`
     : `<div class="price">${euro(p.price)}</div>`;
-   return `<article class="item${image?' has-photo':''}">${image}<div class="itembody"><div class="itemtop"><div class="name">${esc(p.name)}</div>${activeVariants.length?'':priceContent}</div>${activeVariants.length?priceContent:''}${p.desc?`<p class="desc">${esc(p.desc)}</p>`:''}</div></article>`;
+   return `<article class="item${image?' has-photo':''}">${image}<div class="itembody"><div class="itemtop"><div class="name">${esc(p.name)}</div>${activeVariants.length?'':priceContent}</div>${activeVariants.length?priceContent:''}${p.desc?`<div class="info-label">DESCRIZIONE</div><p class="desc">${esc(p.desc)}</p>`:''}${p.ingredients?`<div class="info-label">INGREDIENTI</div><p class="ingredients">${esc(p.ingredients)}</p>`:''}</div></article>`;
   }).join('')}</div></section>`;
  }).join('');
  statusEl.className='status';
@@ -147,6 +182,21 @@ async function loadMenu(){
  }
 }
 loadMenu();
+
+ // Stampa protetta da codice: la stampa contiene i prodotti senza fotografie.
+ const printMenuButton=document.getElementById('printMenuBtn');
+ if(printMenuButton){
+  printMenuButton.addEventListener('click',()=>{
+   const code=window.prompt('Inserisci il codice di sicurezza per stampare il menù:');
+   if(code===null)return;
+   if(code.trim()!=='277460'){
+    window.alert('Codice di sicurezza non corretto.');
+    return;
+   }
+   if(typeof window.print==='function')window.print();
+   else window.alert('La stampa non è supportata. Apri il menù in Chrome e scegli Stampa dal menu ⋮.');
+  });
+ }
 // Mantiene il menu aggiornato anche se resta aperto su tablet/monitor.
 let gustoMenuRefreshBusy=false;
 async function refreshGustoDigitalMenu(){
